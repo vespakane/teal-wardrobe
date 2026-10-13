@@ -336,6 +336,8 @@
   const sheet = $("#sheet");
   function openSheet(listing) {
     state.sheetFor = listing.id;
+    const del = $('[data-sheet="delete"]', sheet);
+    delete del.dataset.armed; del.textContent = "Delete listing";
     $("#sheet-title").textContent = listing.title + " · " + money(listing.price);
     $("#sheet-toggle").textContent = listing.sold ? "Mark as active" : "Mark as sold";
     sheet.hidden = false;
@@ -351,6 +353,11 @@
     const listing = state.listings.find((l) => l.id === state.sheetFor);
     if (!btn || e.target === sheet) { closeSheet(); return; }
     const action = btn.dataset.sheet;
+    if (action === "delete" && !btn.dataset.armed) {
+      btn.dataset.armed = "1";
+      btn.textContent = "Tap again to delete";
+      return;
+    }
     closeSheet();
     if (!listing) return;
     if (action === "toggle-sold") {
@@ -360,7 +367,6 @@
     } else if (action === "edit") {
       openForm(listing);
     } else if (action === "delete") {
-      if (!confirm("Delete this listing?")) return;
       state.listings = state.listings.filter((l) => l.id !== listing.id);
       photoDB.del(listing.id).catch(() => {});
       dropPhotoURL(listing.id);
@@ -415,7 +421,8 @@
     document.documentElement.style.setProperty("--safe-top", (params.get("top") || "0") + "px");
     document.documentElement.style.setProperty("--safe-bottom", (params.get("bottom") || "34") + "px");
   }
-  if (params.has("demo")) {
+  const demoMode = params.has("demo") || location.hash === "#demo" || !!window.VINTED_PREVIEW;
+  if (demoMode) {
     // Demo data for previews (not persisted). Photos come from reference/demo.
     const d = Date.now();
     const mk = (id, price, days, sold, src) => ({ id, seed: id, title: id, price, createdAt: d - days * DAY, sold, soldAt: sold ? d - 1 * DAY : null, demoSrc: src });
