@@ -221,6 +221,13 @@ svg.dark { color: var(--ink); }
 .currency { font-size: 16px; color: var(--ink); margin-right: 2px; }
 .price-wrap input { flex: 0 1 160px !important; }
 .toggle-field { justify-content: space-between; }
+#qty-field { justify-content: space-between; }
+.stepper { display: flex; align-items: center; gap: 14px; }
+.step { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--teal); color: var(--teal); font-size: 20px; line-height: 30px; text-align: center; }
+.step:active { background: var(--chip-fill); }
+.step[disabled] { opacity: 0.35; }
+.qty { min-width: 20px; text-align: center; font-size: 16px; font-weight: 600; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.copy-price .field-label { color: var(--muted); }
 .switch { position: relative; width: 51px; height: 31px; display: block; }
 .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; }
 .switch i { position: absolute; inset: 0; border-radius: 16px; background: #e9e9ea; transition: background .2s; }

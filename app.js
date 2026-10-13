@@ -261,6 +261,31 @@
   const fTitle = $("#f-title"), fPrice = $("#f-price"), fSold = $("#f-sold");
   const photoInput = $("#photo-input"), photoPick = $("#photo-pick"), photoPreview = $("#photo-preview"), photoLabel = $("#photo-pick-label");
   const formError = $("#form-error");
+  const qtyField = $("#qty-field"), qtyEl = $("#f-qty"), multiPrices = $("#multi-prices");
+  let qty = 1;
+
+  function renderCopyPrices() {
+    qtyEl.textContent = qty;
+    $$(".step", qtyField).forEach((b) => { b.disabled = (b.dataset.step === "-1" && qty <= 1) || (b.dataset.step === "1" && qty >= 20); });
+    const existing = $$("input", multiPrices).map((i) => i.value);
+    multiPrices.innerHTML = "";
+    if (qty < 2) { fPrice.closest(".field").hidden = false; return; }
+    fPrice.closest(".field").hidden = true;
+    for (let i = 0; i < qty; i++) {
+      const row = document.createElement("label");
+      row.className = "field copy-price";
+      row.innerHTML = '<span class="field-label">Price ' + (i + 1) + '</span><span class="price-wrap"><span class="currency">£</span><input type="text" inputmode="decimal" placeholder="0.00"></span>';
+      $("input", row).value = existing[i] != null ? existing[i] : fPrice.value;
+      $("input", row).id = "f-price-" + (i + 1);
+      multiPrices.appendChild(row);
+    }
+  }
+  qtyField.addEventListener("click", (e) => {
+    const b = e.target.closest(".step");
+    if (!b) return;
+    qty = Math.min(20, Math.max(1, qty + Number(b.dataset.step)));
+    renderCopyPrices();
+  });
 
   function setPreview(url) {
     if (url) { photoPreview.src = url; photoPreview.hidden = false; photoLabel.hidden = true; photoPick.classList.add("has-photo"); }
@@ -277,6 +302,7 @@
     fPrice.value = listing ? Number(listing.price).toFixed(2) : "";
     fSold.checked = listing ? !!listing.sold : false;
     photoInput.value = "";
+    qty = 1; qtyField.hidden = !!listing; renderCopyPrices();
     setPreview(null);
     if (listing) photoURL(listing.id).then((u) => { if (state.editing === listing.id && !state.pendingPhoto) setPreview(u); });
     formScreen.hidden = false;
@@ -302,8 +328,16 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const price = parseFloat(String(fPrice.value).replace(/[^0-9.]/g, ""));
-    if (!(price > 0)) { formError.textContent = "Enter a price."; formError.hidden = false; fPrice.focus(); return; }
+    const parse = (v) => parseFloat(String(v).replace(/[^0-9.]/g, ""));
+    const prices = (!state.editing && qty > 1) ? $$("input", multiPrices).map((i) => parse(i.value)) : [parse(fPrice.value)];
+    const bad = prices.findIndex((p) => !(p > 0));
+    if (bad !== -1) {
+      formError.textContent = prices.length > 1 ? "Enter a price for copy " + (bad + 1) + "." : "Enter a price.";
+      formError.hidden = false;
+      (prices.length > 1 ? $$("input", multiPrices)[bad] : fPrice).focus();
+      return;
+    }
+    const price = prices[0];
     formError.hidden = true;
     const title = fTitle.value.trim() || "Listing";
     const sold = fSold.checked;
@@ -316,14 +350,24 @@
       if (sold && !listing.sold) { listing.sold = true; listing.soldAt = now; }
       if (!sold && listing.sold) { listing.sold = false; listing.soldAt = null; }
     } else {
-      const seed = uid();
-      const r = mulberry32(hash32(seed + ":age"));
-      // A listing added as already sold is backdated so it carries realistic views.
-      const createdAt = sold ? now - Math.round((7 + r() * 38) * DAY) : now;
-      listing = { id: seed, seed, title, price, createdAt, sold, soldAt: sold ? now : null };
-      state.listings.push(listing);
+      const created = [];
+      for (const p of prices) {
+        const seed = uid() + created.length;
+        const r = mulberry32(hash32(seed + ":age"));
+        // A listing added as already sold is backdated so it carries realistic views.
+        const createdAt = sold ? now - Math.round((7 + r() * 38) * DAY) : now - created.length;
+        created.push({ id: seed, seed, title, price: p, createdAt, sold, soldAt: sold ? now : null });
+      }
+      state.listings.push(...created);
+      listing = created[0];
+      if (state.pendingPhoto) {
+        for (const l of created) {
+          await photoDB.put(l.id, state.pendingPhoto).catch(() => toast("Photo couldn't be saved"));
+          dropPhotoURL(l.id);
+        }
+      }
     }
-    if (state.pendingPhoto) {
+    if (state.editing && state.pendingPhoto) {
       await photoDB.put(listing.id, state.pendingPhoto).catch(() => toast("Photo couldn't be saved"));
       dropPhotoURL(listing.id);
     }

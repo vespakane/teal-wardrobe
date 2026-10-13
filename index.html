@@ -187,6 +187,15 @@
         <span class="field-label">Price</span>
         <span class="price-wrap"><span class="currency">£</span><input type="text" inputmode="decimal" id="f-price" placeholder="0.00"></span>
       </label>
+      <div class="field" id="qty-field">
+        <span class="field-label">Quantity</span>
+        <span class="stepper">
+          <button type="button" class="step" data-step="-1" aria-label="Fewer">&minus;</button>
+          <span class="qty" id="f-qty">1</span>
+          <button type="button" class="step" data-step="1" aria-label="More">+</button>
+        </span>
+      </div>
+      <div id="multi-prices"></div>
       <label class="field toggle-field" id="sold-field">
         <span class="field-label">Sold</span>
         <span class="switch"><input type="checkbox" id="f-sold"><i></i></span>
