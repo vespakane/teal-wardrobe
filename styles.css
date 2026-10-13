@@ -197,6 +197,28 @@ svg.dark { color: var(--ink); }
 
 .empty { grid-column: 1 / -1; padding: 24px 8px 0; color: var(--muted); font-size: 14px; letter-spacing: -0.03em; line-height: 20px; text-align: center; }
 
+/* ---------- listing detail ---------- */
+.detail { z-index: 25; }
+.detail-scroll { padding-bottom: calc(24px + var(--safe-bottom)); }
+.detail-photo { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #f2f2f2; overflow: hidden; }
+.detail-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-btn { position: absolute; top: 2px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #fff; filter: drop-shadow(0 0 2px rgba(0,0,0,.45)); }
+.photo-btn.left { left: 6px; } .photo-btn.right { right: 6px; }
+.detail-sold { height: 54px; padding-left: 16px; background: var(--sold); color: #fff; font-size: 16px; font-weight: 500; line-height: 54px; letter-spacing: -0.015em; }
+.detail-body { padding: 14px 16px 0; }
+.detail-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 18px; font-weight: 600; line-height: 24px; letter-spacing: -0.02em; color: var(--ink); }
+.title-badge { width: 22px; height: 22px; flex: none; }
+.detail-price { margin-top: 20px; font-size: 16px; font-weight: 600; line-height: 20px; letter-spacing: -0.02em; color: var(--ink); }
+.detail-fee { display: flex; flex-wrap: wrap; align-items: center; font-size: 16px; line-height: 20px; letter-spacing: -0.015em; color: var(--teal); }
+.detail-fee .shield { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.share-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 44px; margin-top: 16px; font-size: 16px; letter-spacing: -0.015em; color: var(--ink); }
+.share-btn .icon-24 { stroke-width: 1.6; }
+.share-btn:active { opacity: .6; }
+.band-32 { height: 32px; }
+.detail-desc { padding: 16px 16px 24px; }
+.detail-label { font-size: 16px; line-height: 24px; letter-spacing: -0.015em; color: var(--muted); }
+.detail-text { margin-top: 20px; font-size: 16px; line-height: 24px; letter-spacing: -0.015em; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
 /* ---------- add / edit form (Vinted-styled; no reference screenshot) ---------- */
 .modal { z-index: 30; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); }
 .modal.in { transform: translateY(0); }
@@ -216,7 +238,10 @@ svg.dark { color: var(--ink); }
   flex: 1; min-width: 0; height: 40px; font: inherit; font-size: 16px; letter-spacing: -0.02em; color: var(--ink);
   border: 0; outline: 0; background: transparent; text-align: right; padding: 0; -webkit-user-select: text; user-select: text;
 }
-.field input::placeholder { color: #a0a8a8; }
+.field input::placeholder, .field textarea::placeholder { color: #a0a8a8; }
+.field-multiline { height: auto; min-height: 56px; align-items: flex-start; padding: 16px 0 12px; }
+.field-multiline .field-label { line-height: 24px; }
+.field textarea { flex: 1; min-width: 0; font: inherit; font-size: 16px; letter-spacing: -0.02em; line-height: 24px; color: var(--ink); border: 0; outline: 0; background: transparent; resize: none; padding: 0; text-align: right; -webkit-user-select: text; user-select: text; }
 .price-wrap { flex: 1; display: flex; align-items: center; justify-content: flex-end; }
 .currency { font-size: 16px; color: var(--ink); margin-right: 2px; }
 .price-wrap input { flex: 0 1 160px !important; }

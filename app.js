@@ -193,6 +193,7 @@
     profile: $("#screen-profile"), home: $("#screen-home"), browse: $("#screen-browse"), inbox: $("#screen-inbox"),
   };
   const listingsScreen = $("#screen-listings");
+  const detailScreen = $("#screen-detail");
   const formScreen = $("#screen-form");
 
   function showTab(tab) {
@@ -200,7 +201,25 @@
     state.tab = tab;
     Object.entries(screens).forEach(([k, el]) => { el.hidden = k !== tab; });
     $$(".tabbar .tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
+    if (state.detailOpen) popDetail(true);
     if (state.listingsOpen) popListings(true);
+  }
+
+  function pushScreen(screen, under) {
+    screen.hidden = false;
+    screen.style.transform = "";
+    void screen.offsetWidth;
+    screen.classList.add("in");
+    under.classList.add("pushed-under");
+  }
+  function popScreen(screen, under, instant) {
+    if (instant) screen.classList.add("no-anim");
+    screen.classList.remove("in");
+    screen.style.transform = "";
+    under.classList.remove("pushed-under");
+    under.style.transform = "";
+    const done = () => { screen.hidden = true; screen.classList.remove("no-anim"); };
+    if (instant) done(); else setTimeout(done, 380);
   }
 
   function pushListings() {
@@ -208,57 +227,77 @@
     state.listingsOpen = true;
     renderListings();
     $("#listings-scroll").scrollTop = 0;
-    listingsScreen.hidden = false;
-    listingsScreen.style.transform = "";
-    void listingsScreen.offsetWidth;
-    listingsScreen.classList.add("in");
-    screens[state.tab].classList.add("pushed-under");
+    pushScreen(listingsScreen, screens[state.tab]);
   }
   function popListings(instant) {
     if (!state.listingsOpen) return;
     state.listingsOpen = false;
-    const under = screens[state.tab];
-    if (instant) listingsScreen.classList.add("no-anim");
-    listingsScreen.classList.remove("in");
-    listingsScreen.style.transform = "";
-    under.classList.remove("pushed-under");
-    under.style.transform = "";
-    const done = () => { listingsScreen.hidden = true; listingsScreen.classList.remove("no-anim"); };
-    if (instant) done(); else setTimeout(done, 380);
+    popScreen(listingsScreen, screens[state.tab], instant);
+  }
+
+  // ---------- listing detail ----------
+  const buyerFee = (p) => p * 1.05 + 0.70; // UK buyer protection: 5% + £0.70
+  function renderDetail() {
+    const l = state.listings.find((x) => x.id === state.detailId);
+    if (!l) return;
+    $("#d-title").textContent = l.title;
+    $("#d-price").textContent = money(l.price);
+    $("#d-fee").textContent = money(buyerFee(l.price));
+    $("#d-sold").hidden = !l.sold;
+    $("#d-desc-wrap").hidden = !(l.description && l.description.trim());
+    $("#d-desc").textContent = l.description || "";
+    const img = $("#d-photo");
+    img.removeAttribute("src");
+    photoURL(l.id).then((u) => { if (state.detailId === l.id && u) img.src = u; });
+  }
+  function openDetail(listing) {
+    state.detailId = listing.id;
+    renderDetail();
+    $(".detail-scroll").scrollTop = 0;
+    if (state.detailOpen) return;
+    state.detailOpen = true;
+    pushScreen(detailScreen, listingsScreen);
+  }
+  function popDetail(instant) {
+    if (!state.detailOpen) return;
+    state.detailOpen = false;
+    popScreen(detailScreen, listingsScreen, instant);
   }
 
   // iOS-style edge swipe to go back
-  (() => {
+  function attachSwipe(screen, getUnder, pop, isOpen) {
     let startX = 0, startY = 0, dx = 0, tracking = false, t0 = 0;
-    listingsScreen.addEventListener("touchstart", (e) => {
+    screen.addEventListener("touchstart", (e) => {
       const t = e.touches[0];
-      if (t.clientX > 28 || !state.listingsOpen) return;
+      if (t.clientX > 28 || !isOpen()) return;
       tracking = true; startX = t.clientX; startY = t.clientY; dx = 0; t0 = Date.now();
-      listingsScreen.classList.add("no-anim"); screens[state.tab].classList.add("no-anim");
+      screen.classList.add("no-anim"); getUnder().classList.add("no-anim");
     }, { passive: true });
-    listingsScreen.addEventListener("touchmove", (e) => {
+    screen.addEventListener("touchmove", (e) => {
       if (!tracking) return;
       const t = e.touches[0];
       dx = Math.max(0, t.clientX - startX);
       if (Math.abs(t.clientY - startY) > 40 && dx < 10) { tracking = false; return; }
-      listingsScreen.style.transform = "translateX(" + dx + "px)";
-      screens[state.tab].style.transform = "translateX(" + (-30 + 30 * dx / window.innerWidth) + "%)";
+      screen.style.transform = "translateX(" + dx + "px)";
+      getUnder().style.transform = "translateX(" + (-30 + 30 * dx / window.innerWidth) + "%)";
     }, { passive: true });
     const end = () => {
       if (!tracking) return;
       tracking = false;
       const fast = dx / Math.max(1, Date.now() - t0) > 0.35;
-      listingsScreen.classList.remove("no-anim"); screens[state.tab].classList.remove("no-anim");
-      if (dx > window.innerWidth * 0.35 || (fast && dx > 30)) popListings(false);
-      else { listingsScreen.style.transform = ""; screens[state.tab].style.transform = ""; }
+      screen.classList.remove("no-anim"); getUnder().classList.remove("no-anim");
+      if (dx > window.innerWidth * 0.35 || (fast && dx > 30)) pop(false);
+      else { screen.style.transform = ""; getUnder().style.transform = ""; }
     };
-    listingsScreen.addEventListener("touchend", end);
-    listingsScreen.addEventListener("touchcancel", end);
-  })();
+    screen.addEventListener("touchend", end);
+    screen.addEventListener("touchcancel", end);
+  }
+  attachSwipe(listingsScreen, () => screens[state.tab], popListings, () => state.listingsOpen && !state.detailOpen);
+  attachSwipe(detailScreen, () => listingsScreen, popDetail, () => state.detailOpen);
 
   // ---------- form ----------
   const form = $("#listing-form");
-  const fTitle = $("#f-title"), fPrice = $("#f-price"), fSold = $("#f-sold");
+  const fTitle = $("#f-title"), fPrice = $("#f-price"), fSold = $("#f-sold"), fDesc = $("#f-desc");
   const photoInput = $("#photo-input"), photoPick = $("#photo-pick"), photoPreview = $("#photo-preview"), photoLabel = $("#photo-pick-label");
   const formError = $("#form-error");
   const qtyField = $("#qty-field"), qtyEl = $("#f-qty"), multiPrices = $("#multi-prices");
@@ -299,6 +338,7 @@
     $("#form-title").textContent = listing ? "Edit listing" : "New listing";
     $("#form-submit").textContent = listing ? "Save" : "Upload";
     fTitle.value = listing ? listing.title : "";
+    fDesc.value = listing ? (listing.description || "") : "";
     fPrice.value = listing ? Number(listing.price).toFixed(2) : "";
     fSold.checked = listing ? !!listing.sold : false;
     photoInput.value = "";
@@ -340,13 +380,14 @@
     const price = prices[0];
     formError.hidden = true;
     const title = fTitle.value.trim() || "Listing";
+    const description = fDesc.value.trim();
     const sold = fSold.checked;
     const now = Date.now();
     let listing;
     if (state.editing) {
       listing = state.listings.find((l) => l.id === state.editing);
       if (!listing) return;
-      listing.title = title; listing.price = price;
+      listing.title = title; listing.price = price; listing.description = description;
       if (sold && !listing.sold) { listing.sold = true; listing.soldAt = now; }
       if (!sold && listing.sold) { listing.sold = false; listing.soldAt = null; }
     } else {
@@ -356,7 +397,7 @@
         const r = mulberry32(hash32(seed + ":age"));
         // A listing added as already sold is backdated so it carries realistic views.
         const createdAt = sold ? now - Math.round((7 + r() * 38) * DAY) : now - created.length;
-        created.push({ id: seed, seed, title, price: p, createdAt, sold, soldAt: sold ? now : null });
+        created.push({ id: seed, seed, title, description, price: p, createdAt, sold, soldAt: sold ? now : null });
       }
       state.listings.push(...created);
       listing = created[0];
@@ -374,6 +415,7 @@
     saveListings();
     closeForm();
     if (!state.listingsOpen) { showTab("profile"); pushListings(); } else renderListings();
+    if (state.detailOpen) renderDetail();
   });
 
   // ---------- action sheet (generic) ----------
@@ -419,7 +461,7 @@
       { label: listing.sold ? "Mark as active" : "Mark as sold", onTap: () => {
         listing.sold = !listing.sold;
         listing.soldAt = listing.sold ? Date.now() : null;
-        saveListings(); renderListings();
+        saveListings(); renderListings(); if (state.detailOpen) renderDetail();
       } },
       { label: "Edit listing", onTap: () => openForm(listing) },
       { label: "Delete listing", cls: "danger", confirm: "Tap again to delete", onTap: () => {
@@ -427,6 +469,7 @@
         photoDB.del(listing.id).catch(() => {});
         dropPhotoURL(listing.id);
         saveListings(); renderListings();
+        if (state.detailOpen) popDetail(false);
       } },
     ]);
   }
@@ -455,6 +498,9 @@
       if (a === "open-listings") pushListings();
       else if (a === "user-menu") openUserMenu();
       else if (a === "back") popListings(false);
+      else if (a === "detail-back") popDetail(false);
+      else if (a === "detail-menu") { const l = state.listings.find((x) => x.id === state.detailId); if (l) openListingSheet(l); }
+      else if (a === "share") toast("Share isn't available in this clone");
       else if (a === "form-cancel") closeForm();
       return;
     }
@@ -474,7 +520,7 @@
     if (bump) { toast("Bump isn't available in this clone"); return; }
 
     const item = e.target.closest(".item");
-    if (item) { const l = state.listings.find((x) => x.id === item.dataset.id); if (l) openListingSheet(l); }
+    if (item) { const l = state.listings.find((x) => x.id === item.dataset.id); if (l) openDetail(l); }
   });
 
   // ---------- init ----------
@@ -489,14 +535,14 @@
   if (demoMode) {
     // Demo data for previews (not persisted). Photos come from reference/demo.
     const d = Date.now();
-    const mk = (id, price, days, sold, src) => ({ id, seed: id, title: id, price, createdAt: d - days * DAY, sold, soldAt: sold ? d - 1 * DAY : null, demoSrc: src });
+    const mk = (id, title, price, days, sold, src) => ({ id, seed: id, title, description: "Cared for when worn 💕", price, createdAt: d - days * DAY, sold, soldAt: sold ? d - 1 * DAY : null, demoSrc: src });
     state.listings = [
-      mk("orange-hoodie", 27.5, 1, false, "reference/demo/orange-hoodie.jpg"),
-      mk("grey-hoodie", 35, 1.2, false, "reference/demo/grey-hoodie.jpg"),
-      mk("chucky-tee", 25, 2, false, "reference/demo/chucky-tee.jpg"),
-      mk("mirage-hoodie", 40, 2.5, false, "reference/demo/mirage-hoodie.jpg"),
-      mk("pink-hoodie", 22.5, 30, true, "reference/demo/pink-hoodie.jpg"),
-      mk("shorts", 37.5, 25, true, "reference/demo/shorts.jpg"),
+      mk("orange-hoodie", "Corteiz Alcatraz Hoodie ‘Rust’", 27.5, 1, false, "reference/demo/orange-hoodie.jpg"),
+      mk("grey-hoodie", "Broken Planet ‘Trust Your Universe’ Hoodie", 35, 1.2, false, "reference/demo/grey-hoodie.jpg"),
+      mk("chucky-tee", "Chucky Graphic Tee", 25, 2, false, "reference/demo/chucky-tee.jpg"),
+      mk("mirage-hoodie", "Broken Planet ‘Stuck in Mirage’ Hoodie", 40, 2.5, false, "reference/demo/mirage-hoodie.jpg"),
+      mk("pink-hoodie", "Corteiz Alcatraz Hoodie ‘Pink’", 22.5, 30, true, "reference/demo/pink-hoodie.jpg"),
+      mk("shorts", "Palm Print Swim Shorts", 37.5, 25, true, "reference/demo/shorts.jpg"),
     ];
     saveListings = () => {};
     state.listings.forEach((l) => photoURLs.set(l.id, l.demoSrc));

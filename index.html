@@ -44,6 +44,10 @@
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M19.25 12H4.75M11.75 5l-7 7 7 7"/></symbol>
     <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="3.9" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="20.1" cy="12" r="1.9" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M8.2 7.3L12 3.5l3.8 3.8"/><path d="M7 10H5.5A1.5 1.5 0 0 0 4 11.5v8A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 10H17"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.8l7.5 2.7v6.2c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V5.5L12 2.8z"/><path d="M8.6 12.2l2.3 2.3 4.6-4.7"/></symbol>
+    <symbol id="i-badge-a1" viewBox="0 0 24 24"><rect x="2.5" y="3" width="19" height="18" rx="3" fill="#15191a" stroke="none"/><path d="M8.2 17l3.4-10h.8l3.4 10M9.5 13.6h5" stroke="#fff" stroke-width="1.6" fill="none"/><path d="M5 20.5L19.5 3.5" stroke="#fff" stroke-width="1.2"/></symbol>
+    <symbol id="i-badge-a2" viewBox="0 0 24 24"><rect x="2.5" y="3" width="19" height="18" rx="3" fill="#fff" stroke="#15191a" stroke-width="1.5"/><path d="M12 3v18H19a2.5 2.5 0 0 0 2.5-2.5v-13A2.5 2.5 0 0 0 19 3H12z" fill="#15191a" stroke="none"/><path d="M8.2 17l3.4-10h.8l3.4 10M9.5 13.6h5" stroke="#15191a" stroke-width="1.6" fill="none"/><path d="M12 7l3.4 10M12 13.6h2.5" stroke="#fff" stroke-width="1.6" fill="none"/></symbol>
     <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.3l1.4-2.2h5.6L16.2 7h2.3A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-9z"/><circle cx="12" cy="12.8" r="3.4"/></symbol>
   </defs>
 </svg>
@@ -154,6 +158,29 @@
   </div>
 </section>
 
+<!-- ===================== LISTING DETAIL (pushed) ===================== -->
+<section class="screen pushed detail" id="screen-detail" hidden>
+  <div class="scroll detail-scroll">
+    <div class="detail-photo">
+      <img id="d-photo" alt="">
+      <button class="photo-btn left" data-action="detail-back" aria-label="Back"><svg class="icon-24"><use href="#i-back"/></svg></button>
+      <button class="photo-btn right" data-action="detail-menu" aria-label="More"><svg class="icon-24"><use href="#i-dots"/></svg></button>
+    </div>
+    <div class="detail-sold" id="d-sold">Sold</div>
+    <div class="detail-body">
+      <h2 class="detail-title"><span id="d-title"></span><svg class="title-badge"><use href="#i-badge-a1"/></svg><svg class="title-badge"><use href="#i-badge-a2"/></svg></h2>
+      <div class="detail-price" id="d-price"></div>
+      <div class="detail-fee"><span id="d-fee"></span>&nbsp;incl.&nbsp;<svg class="shield"><use href="#i-shield"/></svg>&nbsp;(subtotal for buyer)</div>
+      <button class="share-btn" data-action="share"><svg class="icon-24"><use href="#i-share"/></svg><span>Share</span></button>
+    </div>
+    <div class="band band-32"></div>
+    <div class="detail-desc" id="d-desc-wrap">
+      <div class="detail-label">Description</div>
+      <div class="detail-text" id="d-desc"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== TAB BAR ===================== -->
 <nav class="tabbar" id="tabbar">
   <button class="tab" data-tab="home"><svg class="icon-24"><use href="#i-home"/></svg><span>Home</span></button>
@@ -182,6 +209,10 @@
       <label class="field">
         <span class="field-label">Title</span>
         <input type="text" id="f-title" placeholder="e.g. Corteiz hoodie" autocomplete="off" maxlength="80">
+      </label>
+      <label class="field field-multiline">
+        <span class="field-label">Description</span>
+        <textarea id="f-desc" rows="2" placeholder="Optional"></textarea>
       </label>
       <label class="field">
         <span class="field-label">Price</span>
