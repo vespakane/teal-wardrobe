@@ -244,8 +244,10 @@
     $("#d-price").textContent = money(l.price);
     $("#d-fee").textContent = money(buyerFee(l.price));
     $("#d-sold").hidden = !l.sold;
-    $("#d-desc-wrap").hidden = !(l.description && l.description.trim());
-    $("#d-desc").textContent = l.description || "";
+    // Description always opens with the item name, then whatever was typed.
+    const extra = (l.description || "").trim();
+    $("#d-desc-wrap").hidden = false;
+    $("#d-desc").textContent = l.title + (extra ? "\n" + extra : "");
     const img = $("#d-photo");
     img.removeAttribute("src");
     photoURL(l.id).then((u) => { if (state.detailId === l.id && u) img.src = u; });
