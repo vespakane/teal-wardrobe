@@ -56,7 +56,7 @@
       <a class="card user-card" href="#" data-action="open-listings">
         <img class="avatar" src="assets/avatar.png" alt="">
         <div class="user-text">
-          <div class="user-name" data-bind="username">dbendit</div>
+          <div class="user-name" data-bind="username" data-action="user-menu">dbendit</div>
           <div class="user-sub">View my listings</div>
         </div>
       </a>
@@ -127,7 +127,7 @@
   <header class="navbar">
     <button class="nav-btn left" data-action="back" aria-label="Back"><svg class="icon-24 dark"><use href="#i-back"/></svg></button>
     <h1 class="nav-title" data-bind="username">dbendit</h1>
-    <button class="nav-btn right" aria-label="More"><svg class="icon-24 dark"><use href="#i-dots"/></svg></button>
+    <button class="nav-btn right" data-action="user-menu" aria-label="More"><svg class="icon-24 dark"><use href="#i-dots"/></svg></button>
   </header>
   <div class="segtabs">
     <button class="segtab active" data-seg="listings">Listings</button>
@@ -201,10 +201,7 @@
 <div class="sheet-backdrop" id="sheet" hidden>
   <div class="sheet">
     <div class="sheet-title" id="sheet-title"></div>
-    <button class="sheet-row" data-sheet="toggle-sold" id="sheet-toggle">Mark as sold</button>
-    <button class="sheet-row" data-sheet="edit">Edit listing</button>
-    <button class="sheet-row danger" data-sheet="delete">Delete listing</button>
-    <button class="sheet-row cancel" data-sheet="cancel">Cancel</button>
+    <div id="sheet-rows"></div>
   </div>
 </div>
 

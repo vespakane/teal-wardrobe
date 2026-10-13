@@ -332,14 +332,22 @@
     if (!state.listingsOpen) { showTab("profile"); pushListings(); } else renderListings();
   });
 
-  // ---------- action sheet ----------
+  // ---------- action sheet (generic) ----------
   const sheet = $("#sheet");
-  function openSheet(listing) {
-    state.sheetFor = listing.id;
-    const del = $('[data-sheet="delete"]', sheet);
-    delete del.dataset.armed; del.textContent = "Delete listing";
-    $("#sheet-title").textContent = listing.title + " · " + money(listing.price);
-    $("#sheet-toggle").textContent = listing.sold ? "Mark as active" : "Mark as sold";
+  const sheetRows = $("#sheet-rows");
+  let sheetItems = [];
+  function showSheet(title, items) {
+    sheetItems = items;
+    $("#sheet-title").textContent = title || "";
+    $("#sheet-title").hidden = !title;
+    sheetRows.innerHTML = "";
+    items.concat([{ label: "Cancel", cls: "cancel" }]).forEach((it, i) => {
+      const b = document.createElement("button");
+      b.className = "sheet-row" + (it.cls ? " " + it.cls : "");
+      b.textContent = it.label;
+      b.dataset.i = i;
+      sheetRows.appendChild(b);
+    });
     sheet.hidden = false;
     void sheet.offsetWidth;
     sheet.classList.add("in");
@@ -349,30 +357,41 @@
     setTimeout(() => { sheet.hidden = true; }, 300);
   }
   sheet.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-sheet]");
-    const listing = state.listings.find((l) => l.id === state.sheetFor);
-    if (!btn || e.target === sheet) { closeSheet(); return; }
-    const action = btn.dataset.sheet;
-    if (action === "delete" && !btn.dataset.armed) {
+    const btn = e.target.closest(".sheet-row");
+    if (!btn) { if (e.target === sheet) closeSheet(); return; }
+    const it = sheetItems[Number(btn.dataset.i)];
+    if (!it) { closeSheet(); return; }
+    if (it.confirm && !btn.dataset.armed) {
       btn.dataset.armed = "1";
-      btn.textContent = "Tap again to delete";
+      btn.textContent = it.confirm;
       return;
     }
     closeSheet();
-    if (!listing) return;
-    if (action === "toggle-sold") {
-      listing.sold = !listing.sold;
-      listing.soldAt = listing.sold ? Date.now() : null;
-      saveListings(); renderListings();
-    } else if (action === "edit") {
-      openForm(listing);
-    } else if (action === "delete") {
-      state.listings = state.listings.filter((l) => l.id !== listing.id);
-      photoDB.del(listing.id).catch(() => {});
-      dropPhotoURL(listing.id);
-      saveListings(); renderListings();
-    }
+    if (it.onTap) it.onTap();
   });
+
+  function openListingSheet(listing) {
+    showSheet(listing.title + " · " + money(listing.price), [
+      { label: listing.sold ? "Mark as active" : "Mark as sold", onTap: () => {
+        listing.sold = !listing.sold;
+        listing.soldAt = listing.sold ? Date.now() : null;
+        saveListings(); renderListings();
+      } },
+      { label: "Edit listing", onTap: () => openForm(listing) },
+      { label: "Delete listing", cls: "danger", confirm: "Tap again to delete", onTap: () => {
+        state.listings = state.listings.filter((l) => l.id !== listing.id);
+        photoDB.del(listing.id).catch(() => {});
+        dropPhotoURL(listing.id);
+        saveListings(); renderListings();
+      } },
+    ]);
+  }
+
+  function openUserMenu() {
+    const items = [{ label: "Add a listing", onTap: () => openForm(null) }];
+    if (!state.listingsOpen) items.push({ label: "View my listings", onTap: pushListings });
+    showSheet(USERNAME, items);
+  }
 
   // ---------- toast ----------
   let toastTimer = null;
@@ -390,6 +409,7 @@
       e.preventDefault();
       const a = act.dataset.action;
       if (a === "open-listings") pushListings();
+      else if (a === "user-menu") openUserMenu();
       else if (a === "back") popListings(false);
       else if (a === "form-cancel") closeForm();
       return;
@@ -410,7 +430,7 @@
     if (bump) { toast("Bump isn't available in this clone"); return; }
 
     const item = e.target.closest(".item");
-    if (item) { const l = state.listings.find((x) => x.id === item.dataset.id); if (l) openSheet(l); }
+    if (item) { const l = state.listings.find((x) => x.id === item.dataset.id); if (l) openListingSheet(l); }
   });
 
   // ---------- init ----------
