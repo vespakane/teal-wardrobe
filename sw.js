@@ -1,5 +1,5 @@
 /* Minimal offline cache so the home-screen app opens without a connection. */
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "vinted-clone-" + VERSION;
 const ASSETS = [
   "./",
