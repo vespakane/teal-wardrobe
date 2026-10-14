@@ -476,6 +476,36 @@
     ]);
   }
 
+  // ---------- balance ----------
+  const BAL_KEY = "vinted.balance.v1";
+  function loadBalance() { const v = parseFloat(localStorage.getItem(BAL_KEY)); return isFinite(v) ? v : 0; }
+  function renderBalance() { $$("[data-bind=balance]").forEach((el) => { el.textContent = money(loadBalance()); }); }
+  const balanceSheet = $("#balance-sheet");
+  const balanceInput = $("#balance-input");
+  function openBalanceSheet() {
+    const v = loadBalance();
+    balanceInput.value = v ? v.toFixed(2) : "";
+    balanceSheet.hidden = false;
+    void balanceSheet.offsetWidth;
+    balanceSheet.classList.add("in");
+    setTimeout(() => { balanceInput.focus(); balanceInput.select(); }, 320);
+  }
+  function closeBalanceSheet() {
+    balanceInput.blur();
+    balanceSheet.classList.remove("in");
+    setTimeout(() => { balanceSheet.hidden = true; }, 300);
+  }
+  function saveBalance() {
+    const raw = balanceInput.value.trim().replace(/[£,\s]/g, "");
+    const v = raw === "" ? 0 : parseFloat(raw);
+    if (!isFinite(v) || v < 0) { toast("Enter a valid amount"); return; }
+    try { localStorage.setItem(BAL_KEY, String(Math.round(v * 100) / 100)); } catch (e) { toast("Couldn't save balance"); }
+    renderBalance();
+    closeBalanceSheet();
+  }
+  $("#balance-form").addEventListener("submit", (e) => { e.preventDefault(); saveBalance(); });
+  balanceSheet.addEventListener("click", (e) => { if (e.target === balanceSheet) closeBalanceSheet(); });
+
   function openUserMenu() {
     const items = [{ label: "Add a listing", onTap: () => openForm(null) }];
     if (!state.listingsOpen) items.push({ label: "View my listings", onTap: pushListings });
@@ -499,6 +529,9 @@
       const a = act.dataset.action;
       if (a === "open-listings") pushListings();
       else if (a === "user-menu") openUserMenu();
+      else if (a === "edit-balance") openBalanceSheet();
+      else if (a === "balance-save") saveBalance();
+      else if (a === "balance-cancel") closeBalanceSheet();
       else if (a === "back") popListings(false);
       else if (a === "detail-back") popDetail(false);
       else if (a === "detail-menu") { const l = state.listings.find((x) => x.id === state.detailId); if (l) openListingSheet(l); }
@@ -527,6 +560,7 @@
 
   // ---------- init ----------
   $$("[data-bind=username]").forEach((el) => { el.textContent = USERNAME; });
+  renderBalance();
   const params = new URLSearchParams(location.search);
   if (params.has("sim")) {
     // Simulate iPhone safe areas when previewing in a desktop browser.

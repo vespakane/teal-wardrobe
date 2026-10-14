@@ -81,7 +81,7 @@
     <div class="band"></div>
     <ul class="rows">
       <li class="row"><svg class="icon"><use href="#i-referral"/></svg><span class="row-label">Earn £15 from referrals</span><svg class="chev"><use href="#i-chevron"/></svg></li>
-      <li class="row"><svg class="icon"><use href="#i-wallet"/></svg><span class="row-label">Balance</span><span class="row-value">£0.00</span><svg class="chev"><use href="#i-chevron"/></svg></li>
+      <li class="row" data-action="edit-balance"><svg class="icon"><use href="#i-wallet"/></svg><span class="row-label">Balance</span><span class="row-value" data-bind="balance">£0.00</span><svg class="chev"><use href="#i-chevron"/></svg></li>
       <li class="row"><svg class="icon"><use href="#i-orders"/></svg><span class="row-label">My orders</span><svg class="chev"><use href="#i-chevron"/></svg></li>
       <li class="row"><svg class="icon"><use href="#i-rocket"/></svg><span class="row-label">Promotional tools</span><svg class="chev"><use href="#i-chevron"/></svg></li>
     </ul>
@@ -238,6 +238,18 @@
 </section>
 
 <!-- ===================== ACTION SHEET ===================== -->
+<div class="sheet-backdrop" id="balance-sheet" hidden>
+  <div class="sheet">
+    <div class="sheet-title">Balance</div>
+    <form class="field balance-field" id="balance-form" autocomplete="off">
+      <span class="field-label">Amount</span>
+      <span class="price-wrap"><span class="currency">£</span><input type="text" inputmode="decimal" placeholder="0.00" id="balance-input"></span>
+    </form>
+    <button type="button" class="sheet-row" data-action="balance-save">Save</button>
+    <button type="button" class="sheet-row cancel" data-action="balance-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="sheet" hidden>
   <div class="sheet">
     <div class="sheet-title" id="sheet-title"></div>

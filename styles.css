@@ -279,3 +279,6 @@ svg.dark { color: var(--ink); }
 .sheet-row.cancel { color: var(--muted); }
 
 .toast { position: absolute; left: 16px; right: 16px; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px); z-index: 50; background: var(--ink); color: #fff; font-size: 14px; letter-spacing: -0.02em; padding: 12px 16px; border-radius: 8px; text-align: center; }
+
+.balance-field { padding: 0 16px; }
+.balance-field .field-label { width: auto; flex: 1; }
